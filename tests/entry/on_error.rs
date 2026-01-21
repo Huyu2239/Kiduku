@@ -1,4 +1,4 @@
-use sample_discord_bot::presentation::entry::on_error;
+use kiduku::presentation::entry::on_error;
 
 #[test]
 fn test_handle_exec_error_does_not_panic() {

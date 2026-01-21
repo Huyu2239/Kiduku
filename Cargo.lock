@@ -774,6 +774,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "kiduku"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dotenvy",
+ "poise",
+ "serenity",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "validate_macro",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1350,20 +1364,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "sample_discord_bot"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "dotenvy",
- "poise",
- "serenity",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "validate_macro",
 ]
 
 [[package]]

@@ -8,9 +8,9 @@
 //! MessageInput を直接作成しているが、実際のアプリケーションでは
 //! Mapper経由で同等の処理が行われる。
 
-use sample_discord_bot::domain::policy::greeting;
-use sample_discord_bot::usecase::dto::DiscordExecStep;
-use sample_discord_bot::usecase::on_message::greeting as greeting_usecase;
+use kiduku::domain::policy::greeting;
+use kiduku::usecase::dto::DiscordExecStep;
+use kiduku::usecase::on_message::greeting as greeting_usecase;
 
 /// Interface層 → Usecase層 → Domain層の統合フロー
 ///
@@ -29,7 +29,7 @@ fn test_greeting_integration_flow() {
     // === 1. Interface層: メッセージデータの変換 ===
     // 実際のアプリケーションでは serenity::Message から変換されるが、
     // 統合テストでは MessageInput を直接作成
-    let input = sample_discord_bot::usecase::dto::MessageInput::new(message_content, channel_id);
+    let input = kiduku::usecase::dto::MessageInput::new(message_content, channel_id);
 
     // === 2. Domain層: ポリシー判定の検証 ===
     // Usecaseが内部で呼び出すDomain policyを直接呼んで、
@@ -85,7 +85,7 @@ fn test_non_greeting_integration_flow() {
     );
 
     // === Usecase層の実行 ===
-    let input = sample_discord_bot::usecase::dto::MessageInput::new(message_content, channel_id);
+    let input = kiduku::usecase::dto::MessageInput::new(message_content, channel_id);
     let result = greeting_usecase::execute(input);
 
     assert!(result.is_ok());
@@ -113,7 +113,7 @@ fn test_whitespace_handling_integration() {
     );
 
     // === Usecase層: 全体フローの確認 ===
-    let input = sample_discord_bot::usecase::dto::MessageInput::new(message_content, channel_id);
+    let input = kiduku::usecase::dto::MessageInput::new(message_content, channel_id);
     let result = greeting_usecase::execute(input);
 
     assert!(result.is_ok());
@@ -136,7 +136,7 @@ fn test_plan_validation_is_applied() {
     // 将来、複雑なプランを生成するUsecaseが追加された際に、
     // ここでバリデーションエラーのテストを追加する
 
-    let input = sample_discord_bot::usecase::dto::MessageInput::new("おはよう", 12345);
+    let input = kiduku::usecase::dto::MessageInput::new("おはよう", 12345);
     let result = greeting_usecase::execute(input);
 
     // sync_validate_return マクロにより、validate_plan が実行されている

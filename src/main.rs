@@ -1,8 +1,8 @@
 use anyhow::Context as _;
 use serenity::prelude::*;
 
-use sample_discord_bot::infrastructure::config::{set_dev_mode, AppConfig};
-use sample_discord_bot::presentation::build_framework;
+use kiduku::infrastructure::config::{set_dev_mode, AppConfig};
+use kiduku::presentation::build_framework;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

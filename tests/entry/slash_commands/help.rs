@@ -1,5 +1,5 @@
-use sample_discord_bot::usecase::dto::DiscordExecStep;
-use sample_discord_bot::usecase::slash_commands::help as help_usecase;
+use kiduku::usecase::dto::DiscordExecStep;
+use kiduku::usecase::slash_commands::help as help_usecase;
 
 #[test]
 fn test_help_command_plan() {
