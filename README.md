@@ -1,7 +1,7 @@
-# Sample DiscordBot(Prototype)
+# Kiduku - Discord既読確認Bot
 
 ## 概要
-RustでつくるDiscordbotプロジェクトです。
+Discordサーバー内のメンション確認状況を可視化し、チーム内での既読状況を把握するボットです。
 
 - このREADME.mdは人間向けにかかれています。
 - AI向けのドキュメントは、`.ai/AGENTS.md` に記載します。

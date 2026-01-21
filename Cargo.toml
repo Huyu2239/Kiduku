@@ -1,10 +1,10 @@
 [package]
-name = "sample_discord_bot"
+name = "kiduku"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "sample_discord_bot"
+name = "kiduku"
 path = "src/lib.rs"
 
 [dependencies]
