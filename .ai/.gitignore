@@ -1,0 +1,21 @@
+# --- Secrets / credentials ---
+auth.json
+config.toml
+
+# --- Runtime logs / traces ---
+log/
+sessions/
+
+# --- Temp / sandbox artifacts ---
+tmp/
+
+# --- Local / machine-generated metadata ---
+history.jsonl
+version.json
+
+# Codex internal system skills
+skills/.system/
+
+# --- Optional: local-only skills (if you use it) ---
+skills/local/**
+!skills/local/.gitkeep

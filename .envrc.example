@@ -1,0 +1,16 @@
+# プロジェクト設定
+export CODEX_HOME="$PWD/.ai"
+
+# 開発設定
+
+## デバッグモード
+export DEV_MODE=true
+
+## ログレベルを設定（例: debug, info, warn, error）
+export LOG_LEVEL=debug
+
+## シャード数を指定（0はシャードなし）
+export SHARD_COUNT=0
+
+## Discordボットのトークン
+export DISCORD_BOT_TOKEN=your_bot_token_here

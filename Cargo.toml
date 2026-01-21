@@ -1,0 +1,36 @@
+[package]
+name = "sample_discord_bot"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "sample_discord_bot"
+path = "src/lib.rs"
+
+[dependencies]
+# === マクロ ===
+validate_macro = { path = "crates/validate_macro" }
+
+# === Discord ===
+serenity = { version = "0.12", default-features = false, features = [
+    "client",         # クライアント機能
+    "gateway",        # Gateway接続
+    "model",          # データモデル
+    "http",           # HTTP API
+    "cache",          # キャッシュ
+    "rustls_backend", # TLS (rustls使用)
+] }
+poise = "0.6"
+
+# === 非同期ランタイム ===
+tokio = { version = "1.49", features = ["macros", "rt-multi-thread", "time"] }
+
+# === エラーハンドリング ===
+anyhow = "1.0"
+
+# === ログ ===
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# === 環境変数 ===
+dotenvy = "0.15"
