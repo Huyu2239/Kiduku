@@ -1,6 +1,7 @@
 # --- Secrets / credentials ---
 auth.json
 config.toml
+models_cache.json
 
 # --- Runtime logs / traces ---
 log/
