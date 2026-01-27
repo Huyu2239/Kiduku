@@ -30,9 +30,17 @@ $ tree -a -L 1
 
 ## ドキュメント構成
 
-- ルートドキュメントは `README.md` と `.ai/AGENTS.md` です。
-    - ざっくりと説明します。
-    - `.ai/AGENTS.md`はそれに加え、AIに対しての汎用的な取り決めを記述します。
-- プロジェクトドキュメントは `docs/` に格納します。
-    - 設計方針や全体構造を説明します。
-    - AIに対する詳細な取り決めは`.ai/docs`記述します。
+- **ルートドキュメント**
+    - `README.md` (このファイル) : プロジェクト概要
+    - `.ai/AGENTS.md` : AI向けの規約・制約
+
+- **プロジェクトドキュメント** (`docs/` 配下)
+    - [`docs/index.md`](./docs/index.md) : ドキュメント索引
+    - [`docs/onboarding/`](./docs/onboarding/index.md) : 開発環境セットアップ
+    - [`docs/architecture/`](./docs/architecture/index.md) : アーキテクチャ設計
+    - [`docs/features/`](./docs/features/index.md) : 機能仕様・PRD・DD
+    - [`docs/rules/`](./docs/rules/index.md) : 開発規約
+    - [`docs/todo.md`](./docs/todo.md) : 実装ロードマップ
+
+- **AI向けドキュメント** (`.ai/docs/` 配下)
+    - AI専用の補助ドキュメント・内部メモ
