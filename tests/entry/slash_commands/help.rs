@@ -1,25 +1,21 @@
-use kiduku::usecase::dto::DiscordExecStep;
 use kiduku::usecase::slash_commands::help as help_usecase;
 
 #[test]
-fn test_help_command_plan() {
-    let plan = help_usecase::execute().expect("help usecase should return plan");
-    let steps = plan.into_steps();
+fn test_help_command_output() {
+    let help = help_usecase::execute().expect("help usecase should return output");
 
-    assert_eq!(steps.len(), 1, "help should return single step");
+    assert_eq!(help.title, "Kiduku ヘルプ");
+    assert!(
+        help.description.contains("✅"),
+        "help description should explain the reaction"
+    );
 
-    match &steps[0] {
-        DiscordExecStep::Response(payload) => {
-            assert_eq!(
-                payload.content.as_deref(),
-                Some("利用可能なコマンド: /help"),
-                "help response content should match"
-            );
-            assert!(
-                payload.ephemeral.is_none(),
-                "help should not force ephemeral"
-            );
-        }
-        other => panic!("Expected Response step, got {:?}", other),
-    }
+    let command_names = help
+        .commands
+        .iter()
+        .map(|command| command.name.as_str())
+        .collect::<Vec<_>>();
+
+    assert!(command_names.contains(&"/help"));
+    assert!(command_names.contains(&"/check-reads"));
 }
