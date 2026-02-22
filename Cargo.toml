@@ -34,3 +34,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # === 環境変数 ===
 dotenvy = "0.15"
+
+# === Database (PostgreSQL) ===
+tokio-postgres = "0.7"
+deadpool-postgres = { version = "0.14", features = ["rt_tokio_1"] }

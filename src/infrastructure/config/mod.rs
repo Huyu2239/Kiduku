@@ -7,6 +7,7 @@ use tracing_subscriber::EnvFilter;
 #[derive(Debug)]
 pub struct AppConfig {
     pub discord_bot_token: String,
+    pub database_url: String,
     pub env_filter: EnvFilter,
     pub dev_mode: bool,
 }
@@ -27,8 +28,11 @@ impl AppConfig {
         let env_filter = build_env_filter(dev_mode);
         let discord_bot_token =
             env::var("DISCORD_BOT_TOKEN").context("DISCORD_BOT_TOKEN is not set")?;
+        let database_url = env::var("DATABASE_URL")
+            .unwrap_or_else(|_| "postgres://kiduku:kiduku@localhost:5432/kiduku".to_string());
         Ok(Self {
             discord_bot_token,
+            database_url,
             env_filter,
             dev_mode,
         })
