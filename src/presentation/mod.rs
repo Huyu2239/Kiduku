@@ -2,21 +2,26 @@ use std::time::Duration;
 
 use poise::serenity_prelude as serenity;
 
+use crate::infrastructure::db::Db;
+
 pub mod discord_exec;
 pub mod entry;
 
-pub struct Data;
+#[derive(Clone)]
+pub struct Data {
+    pub db: Db,
+}
 
 pub type Error = anyhow::Error;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 
-pub fn build_framework() -> poise::Framework<Data, Error> {
+pub fn build_framework(db: Db) -> poise::Framework<Data, Error> {
     let options = poise::FrameworkOptions {
         commands: entry::slash_commands::all(),
         on_error: |error| Box::pin(entry::on_error::handle_framework_error(error)),
-        event_handler: |ctx, event, _framework, _data| {
+        event_handler: |ctx, event, _framework, data| {
             Box::pin(async move {
-                handle_event(ctx, event).await;
+                handle_event(ctx, event, data).await;
                 Ok(())
             })
         },
@@ -26,6 +31,7 @@ pub fn build_framework() -> poise::Framework<Data, Error> {
     poise::Framework::builder()
         .options(options)
         .setup(move |ctx, ready, framework| {
+            let db = db.clone();
             Box::pin(async move {
                 tracing::info!("logged in as {}", ready.user.name);
                 let commands =
@@ -34,15 +40,20 @@ pub fn build_framework() -> poise::Framework<Data, Error> {
                 tokio::spawn(async move {
                     register_commands_with_retry(ctx, commands).await;
                 });
-                Ok(Data)
+                Ok(Data { db })
             })
         })
         .build()
 }
 
-async fn handle_event(ctx: &serenity::Context, event: &serenity::FullEvent) {
+async fn handle_event(ctx: &serenity::Context, event: &serenity::FullEvent, data: &Data) {
     if let serenity::FullEvent::Message { new_message } = event {
-        entry::on_message::handle(ctx, new_message).await;
+        entry::on_message::handle(ctx, data, new_message).await;
+        return;
+    }
+
+    if let serenity::FullEvent::ReactionAdd { add_reaction } = event {
+        entry::on_reaction_add::handle(ctx, data, add_reaction).await;
     }
 }
 
