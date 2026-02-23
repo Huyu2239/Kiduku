@@ -1,10 +1,10 @@
 use std::collections::HashMap;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use chrono::{Datelike, Duration, NaiveTime, TimeZone, Utc, Weekday};
 use poise::serenity_prelude as serenity;
 
 use crate::infrastructure::db::Db;
+use crate::presentation::entry::util::{current_unix_timestamp, truncate};
 
 const JST_OFFSET_SECS: i64 = 9 * 3600;
 const BATCH_HOUR_JST: u32 = 8;
@@ -49,7 +49,7 @@ async fn run_weekly_batch(ctx: &serenity::Context, db: &Db) {
     }
 
     for (user_id, mention_ids) in &by_user {
-        if let Err(err) = send_weekly_dm(ctx, db, *user_id, mention_ids).await {
+        if let Err(err) = send_weekly_dm(ctx, *user_id, mention_ids).await {
             tracing::error!("週次DM送信失敗 user={}: {:?}", user_id, err);
         }
     }
@@ -59,7 +59,6 @@ async fn run_weekly_batch(ctx: &serenity::Context, db: &Db) {
 
 async fn send_weekly_dm(
     ctx: &serenity::Context,
-    db: &Db,
     user_id: u64,
     mention_ids: &[i64],
 ) -> anyhow::Result<()> {
@@ -78,10 +77,6 @@ async fn send_weekly_dm(
     dm_channel
         .send_message(&ctx.http, serenity::CreateMessage::new().content(content))
         .await?;
-
-    // DB の fetch は mention_ids から必要に応じて取得可能だが、
-    // ここでは件数のみ通知する (過多な詳細はDMを圧迫するため)
-    let _ = db; // db は将来の詳細取得のために引数に残す
 
     Ok(())
 }
@@ -231,19 +226,4 @@ fn is_first_monday_of_month_jst(now_unix: i64) -> bool {
     let date = now_jst.date_naive();
 
     date.weekday() == Weekday::Mon && date.day() <= 7
-}
-
-fn current_unix_timestamp() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64
-}
-
-fn truncate(content: &str, max_chars: usize) -> String {
-    let mut truncated = content.chars().take(max_chars).collect::<String>();
-    if content.chars().count() > max_chars {
-        truncated.push('…');
-    }
-    truncated
 }

@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use poise::serenity_prelude as serenity;
 
 use crate::infrastructure::db::MentionForTarget;
+use crate::presentation::entry::util::truncate;
 use crate::presentation::{Context, Error};
 
 const PAGE_SIZE: usize = 5;
@@ -49,21 +50,11 @@ pub async fn fetch_page(
     show_done: bool,
 ) -> Result<Vec<MentionForTarget>, Error> {
     let offset = (page * PAGE_SIZE) as i64;
-    // フィルタリングのため多めに取得する
-    let fetch_limit = if show_done {
-        (PAGE_SIZE + 1) as i64
-    } else {
-        // show_done=false の場合、done済みを除外するため余裕を持って取得
-        (PAGE_SIZE * 3 + 1) as i64
-    };
+    let fetch_limit = (PAGE_SIZE + 1) as i64;
 
-    let mut items = db
-        .fetch_mentions_for_target(user_id, offset, fetch_limit)
+    let items = db
+        .fetch_mentions_for_target(user_id, offset, fetch_limit, show_done)
         .await?;
-
-    if !show_done {
-        items.retain(|item| !item.is_done);
-    }
 
     Ok(items)
 }
@@ -134,12 +125,4 @@ pub fn build_nav_buttons(
         prev_button,
         next_button,
     ])]
-}
-
-fn truncate(content: &str, max_chars: usize) -> String {
-    let mut truncated = content.chars().take(max_chars).collect::<String>();
-    if content.chars().count() > max_chars {
-        truncated.push('…');
-    }
-    truncated
 }

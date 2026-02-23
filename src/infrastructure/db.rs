@@ -274,6 +274,7 @@ impl Db {
         user_id: u64,
         offset: i64,
         limit: i64,
+        show_done: bool,
     ) -> anyhow::Result<Vec<MentionForTarget>> {
         let client = self
             .pool
@@ -292,9 +293,12 @@ impl Db {
                  FROM mentions m \
                  JOIN mention_targets mt ON m.id = mt.mention_id \
                  WHERE mt.user_id = $1 AND mt.ignored_at IS NULL \
+                   AND ($4 OR NOT EXISTS(\
+                        SELECT 1 FROM mention_dones \
+                        WHERE mention_id = m.id AND user_id = $1)) \
                  ORDER BY m.created_at DESC \
                  LIMIT $2 OFFSET $3",
-                &[&(user_id as i64), &limit, &offset],
+                &[&(user_id as i64), &limit, &offset, &show_done],
             )
             .await
             .context("被メンション一覧の取得に失敗しました")?;

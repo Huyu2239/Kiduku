@@ -7,13 +7,11 @@ use serenity::model::prelude::{Member, RoleId, UserId};
 use crate::infrastructure::db::NewMention;
 use crate::interface::mapper::input_mapper;
 use crate::presentation::entry::on_error;
+use crate::presentation::entry::util::{
+    DONE_EMOJI_ID, DONE_EMOJI_NAME, KIDOKU_EMOJI_ID, KIDOKU_EMOJI_NAME,
+};
 use crate::presentation::{Data, Error};
 use crate::usecase::on_message::auto_add_read_reaction;
-
-const KIDOKU_EMOJI_ID: u64 = 1475281418400698633;
-const KIDOKU_EMOJI_NAME: &str = "KIDOKU";
-const DONE_EMOJI_ID: u64 = 1475281416370524414;
-const DONE_EMOJI_NAME: &str = "DONE";
 
 pub async fn handle(ctx: &serenity::Context, data: &Data, message: &serenity::Message) {
     if message.author.bot {
