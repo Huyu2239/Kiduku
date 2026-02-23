@@ -17,9 +17,10 @@
 現在の想定構成は以下のとおりである。
 
 * `onboarding/` : 開発を開始するための手順・前提
-* `features/` : 機能仕様、要件、設計（PRD / DD 等）
+* `features/` : 機能仕様、要件、設計（PRD / DD 等）、実装計画
 * `architecture/` : 全体構造、設計方針、モジュール構成
 * `rules/` : 開発・実装・運用に関する規約
+* `todo.md` : 実装ロードマップ（features/ と連動）
 
 ## index.md について
 
