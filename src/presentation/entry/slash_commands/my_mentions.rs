@@ -126,4 +126,3 @@ pub fn build_nav_buttons(
         next_button,
     ])]
 }
-

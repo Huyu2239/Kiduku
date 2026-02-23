@@ -227,4 +227,3 @@ fn is_first_monday_of_month_jst(now_unix: i64) -> bool {
 
     date.weekday() == Weekday::Mon && date.day() <= 7
 }
-
