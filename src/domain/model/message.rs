@@ -9,6 +9,7 @@ pub struct Message {
     pub user_mentions: Vec<UserId>,
     pub role_mentions: Vec<RoleId>,
     pub mentions_everyone: bool,
+    pub is_reply: bool,
 }
 
 impl Message {

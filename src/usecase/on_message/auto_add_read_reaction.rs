@@ -29,6 +29,7 @@ mod tests {
             user_mentions: vec![UserId::new(2)],
             role_mentions: Vec::new(),
             mentions_everyone: false,
+            is_reply: false,
         };
 
         let output = execute(input).expect("usecase should succeed");
@@ -45,6 +46,24 @@ mod tests {
             user_mentions: Vec::new(),
             role_mentions: Vec::new(),
             mentions_everyone: false,
+            is_reply: false,
+        };
+
+        let output = execute(input).expect("usecase should succeed");
+        assert!(!output.should_add_reaction);
+    }
+
+    #[test]
+    fn returns_false_when_reply_with_mentions() {
+        let input = MessageInputDto {
+            message_id: MessageId::new(1),
+            channel_id: ChannelId::new(1),
+            author_id: UserId::new(1),
+            content: "<@2> ping".into(),
+            user_mentions: vec![UserId::new(2)],
+            role_mentions: Vec::new(),
+            mentions_everyone: false,
+            is_reply: true,
         };
 
         let output = execute(input).expect("usecase should succeed");

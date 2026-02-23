@@ -19,6 +19,7 @@ pub fn from_message_to_message_input_dto(message: &Message) -> MessageInputDto {
         user_mentions,
         role_mentions,
         mentions_everyone: message.mention_everyone,
+        is_reply: message.message_reference.is_some(),
     }
 }
 
@@ -31,5 +32,6 @@ pub fn to_domain_message(input: &MessageInputDto) -> model::Message {
         user_mentions: input.user_mentions.clone(),
         role_mentions: input.role_mentions.clone(),
         mentions_everyone: input.mentions_everyone,
+        is_reply: input.is_reply,
     }
 }

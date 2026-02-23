@@ -1,7 +1,7 @@
 use crate::domain::model::{MentionType, Message};
 
 pub fn should_add_read_reaction(message: &Message) -> bool {
-    message.has_mention()
+    !message.is_reply && message.has_mention()
 }
 
 pub fn extract_mentions(message: &Message) -> Vec<MentionType> {
@@ -47,7 +47,17 @@ mod tests {
             user_mentions: Vec::new(),
             role_mentions: Vec::new(),
             mentions_everyone: false,
+            is_reply: false,
         }
+    }
+
+    #[test]
+    fn skips_reply_messages() {
+        let mut message = base_message();
+        message.user_mentions = vec![UserId::new(10)];
+        message.is_reply = true;
+
+        assert!(!should_add_read_reaction(&message));
     }
 
     #[test]
