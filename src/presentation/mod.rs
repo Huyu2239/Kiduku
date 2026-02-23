@@ -36,10 +36,13 @@ pub fn build_framework(db: Db) -> poise::Framework<Data, Error> {
                 tracing::info!("logged in as {}", ready.user.name);
                 let commands =
                     poise::builtins::create_application_commands(&framework.options().commands);
-                let ctx = ctx.clone();
+                let ctx_clone = ctx.clone();
                 tokio::spawn(async move {
-                    register_commands_with_retry(ctx, commands).await;
+                    register_commands_with_retry(ctx_clone, commands).await;
                 });
+                let db_for_batch = db.clone();
+                let ctx_for_batch = ctx.clone();
+                entry::batch::start(ctx_for_batch, db_for_batch);
                 Ok(Data { db })
             })
         })
@@ -54,6 +57,14 @@ async fn handle_event(ctx: &serenity::Context, event: &serenity::FullEvent, data
 
     if let serenity::FullEvent::ReactionAdd { add_reaction } = event {
         entry::on_reaction_add::handle(ctx, data, add_reaction).await;
+        return;
+    }
+
+    if let serenity::FullEvent::InteractionCreate {
+        interaction: serenity::Interaction::Component(comp),
+    } = event
+    {
+        entry::on_component::handle(ctx, data, comp).await;
     }
 }
 
