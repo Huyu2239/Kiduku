@@ -1,7 +1,13 @@
-.PHONY: check help db.up db.down db.migrate db.reset
+.PHONY: check help db.up db.down db.migrate db.reset deploy
 
 # デフォルトターゲット
 .DEFAULT_GOAL := help
+
+DEPLOY_USER  ?= $(shell id -un)
+SERVICE_NAME := kiduku
+INSTALL_DIR  := /usr/local/bin
+SERVICE_FILE := /etc/systemd/system/$(SERVICE_NAME).service
+ENV_FILE     := /etc/$(SERVICE_NAME)/env
 
 # ヘルプ
 help:
@@ -10,6 +16,7 @@ help:
 	@echo "commands:"
 	@echo "  help         このヘルプを表示"
 	@echo "  check        フォーマット・Lint・テストを実行"
+	@echo "  deploy       リリースビルドして systemd デーモンとして登録・起動"
 	@echo "  db.up        PostgreSQL コンテナを起動"
 	@echo "  db.down      PostgreSQL コンテナを停止"
 	@echo "  db.migrate   スキーマを既存 DB に適用（冪等）"
@@ -41,3 +48,19 @@ db.reset:
 	@docker compose down -v
 	@docker compose up -d postgres
 	@echo "✓ DB をリセットしました（スキーマは自動適用されます）"
+
+# リリースビルドして systemd デーモンとして登録・起動
+deploy:
+	@cargo build --release
+	@echo "バイナリをインストール中..."
+	@sudo install -m 755 target/release/$(SERVICE_NAME) $(INSTALL_DIR)/$(SERVICE_NAME)
+	@echo "systemd ユニットファイルをインストール中..."
+	@sudo mkdir -p /etc/$(SERVICE_NAME)
+	@[ -f $(ENV_FILE) ] || { echo "注意: $(ENV_FILE) が存在しません。deploy/env.example を参考に作成してください。"; }
+	@sed 's/DEPLOY_USER/$(DEPLOY_USER)/' deploy/$(SERVICE_NAME).service | sudo tee $(SERVICE_FILE) > /dev/null
+	@sudo systemctl daemon-reload
+	@sudo systemctl enable $(SERVICE_NAME)
+	@sudo systemctl restart $(SERVICE_NAME)
+	@echo ""
+	@echo "✓ デプロイ完了"
+	@sudo systemctl status $(SERVICE_NAME) --no-pager

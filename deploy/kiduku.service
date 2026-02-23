@@ -1,0 +1,16 @@
+[Unit]
+Description=Kiduku Discord Bot
+After=network.target
+
+[Service]
+Type=simple
+User=DEPLOY_USER
+EnvironmentFile=/etc/kiduku/env
+ExecStart=/usr/local/bin/kiduku
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
