@@ -24,3 +24,10 @@ CREATE TABLE IF NOT EXISTS mention_reads (
   read_at BIGINT NOT NULL,
   PRIMARY KEY (mention_id, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS mention_dones (
+  mention_id BIGINT NOT NULL REFERENCES mentions(id) ON DELETE CASCADE,
+  user_id BIGINT NOT NULL,
+  done_at BIGINT NOT NULL,
+  PRIMARY KEY (mention_id, user_id)
+);

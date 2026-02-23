@@ -32,6 +32,7 @@ pub struct StoredMention {
     pub created_at_unix: i64,
     pub target_user_ids: Vec<u64>,
     pub read_user_ids: Vec<u64>,
+    pub done_user_ids: Vec<u64>,
 }
 
 impl Db {
@@ -114,6 +115,43 @@ impl Db {
         Ok(())
     }
 
+    pub async fn record_done(
+        &self,
+        message_id: u64,
+        user_id: u64,
+        done_at_unix: i64,
+    ) -> anyhow::Result<()> {
+        let client = self
+            .pool
+            .get()
+            .await
+            .context("DB接続の取得に失敗しました")?;
+
+        let mention_id = match client
+            .query_opt(
+                "SELECT id FROM mentions WHERE message_id = $1",
+                &[&(message_id as i64)],
+            )
+            .await
+            .context("メンションの検索に失敗しました")?
+        {
+            Some(row) => row.get::<_, i64>(0),
+            None => return Ok(()),
+        };
+
+        client
+            .execute(
+                "INSERT INTO mention_dones (mention_id, user_id, done_at) \
+                 VALUES ($1, $2, $3) \
+                 ON CONFLICT (mention_id, user_id) DO NOTHING",
+                &[&mention_id, &(user_id as i64), &done_at_unix],
+            )
+            .await
+            .context("解決情報の保存に失敗しました")?;
+
+        Ok(())
+    }
+
     pub async fn fetch_mentions_for_author(
         &self,
         author_id: u64,
@@ -149,12 +187,14 @@ impl Db {
 
         let targets = fetch_user_ids_by_mention(&client, &mention_ids, "mention_targets").await?;
         let reads = fetch_user_ids_by_mention(&client, &mention_ids, "mention_reads").await?;
+        let dones = fetch_user_ids_by_mention(&client, &mention_ids, "mention_dones").await?;
 
         let mut result = Vec::new();
         for row in rows {
             let mention_id = row.get::<_, i64>("id");
             let target_user_ids = targets.get(&mention_id).cloned().unwrap_or_default();
             let read_user_ids = reads.get(&mention_id).cloned().unwrap_or_default();
+            let done_user_ids = dones.get(&mention_id).cloned().unwrap_or_default();
             result.push(StoredMention {
                 guild_id: row.get::<_, i64>("guild_id") as u64,
                 channel_id: row.get::<_, i64>("channel_id") as u64,
@@ -163,6 +203,7 @@ impl Db {
                 created_at_unix: row.get::<_, i64>("created_at"),
                 target_user_ids,
                 read_user_ids,
+                done_user_ids,
             });
         }
 

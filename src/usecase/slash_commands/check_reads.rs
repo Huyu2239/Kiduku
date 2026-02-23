@@ -22,12 +22,15 @@ pub fn execute(input: CheckReadsInputDto) -> Result<Vec<CheckReadsOutputDto>, Us
         let (read_users, unread_users) =
             read_status_calc::calculate_read_status(&mentioned_users, &message.reaction_user_ids);
 
+        let done_users = dedup_sorted(message.done_user_ids.clone());
+
         outputs.push(CheckReadsOutputDto {
             message_id: message.message_id,
             message_content: message.content,
             mentioned_users,
             read_users,
             unread_users,
+            done_users,
         });
     }
 
@@ -79,6 +82,7 @@ mod tests {
             mentions_everyone: false,
             everyone_member_ids: Vec::new(),
             reaction_user_ids: vec![UserId::new(2), UserId::new(3)],
+            done_user_ids: Vec::new(),
         };
 
         let input = CheckReadsInputDto {
@@ -109,6 +113,7 @@ mod tests {
                 mentions_everyone: false,
                 everyone_member_ids: Vec::new(),
                 reaction_user_ids: Vec::new(),
+                done_user_ids: Vec::new(),
             }],
         };
 

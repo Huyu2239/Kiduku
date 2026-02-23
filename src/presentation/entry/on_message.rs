@@ -10,7 +10,10 @@ use crate::presentation::entry::on_error;
 use crate::presentation::{Data, Error};
 use crate::usecase::on_message::auto_add_read_reaction;
 
-const READ_EMOJI: &str = "✅";
+const KIDOKU_EMOJI_ID: u64 = 1475281418400698633;
+const KIDOKU_EMOJI_NAME: &str = "KIDOKU";
+const DONE_EMOJI_ID: u64 = 1475281416370524414;
+const DONE_EMOJI_NAME: &str = "DONE";
 
 pub async fn handle(ctx: &serenity::Context, data: &Data, message: &serenity::Message) {
     if message.author.bot {
@@ -64,8 +67,21 @@ pub async fn handle(ctx: &serenity::Context, data: &Data, message: &serenity::Me
         on_error::handle_exec_error(err);
     }
 
-    let reaction = serenity::ReactionType::Unicode(READ_EMOJI.to_string());
-    if let Err(err) = message.react(&ctx.http, reaction).await {
+    let kidoku_reaction = serenity::ReactionType::Custom {
+        animated: false,
+        id: serenity::EmojiId::new(KIDOKU_EMOJI_ID),
+        name: Some(KIDOKU_EMOJI_NAME.to_string()),
+    };
+    if let Err(err) = message.react(&ctx.http, kidoku_reaction).await {
+        on_error::handle_exec_error(err.into());
+    }
+
+    let done_reaction = serenity::ReactionType::Custom {
+        animated: false,
+        id: serenity::EmojiId::new(DONE_EMOJI_ID),
+        name: Some(DONE_EMOJI_NAME.to_string()),
+    };
+    if let Err(err) = message.react(&ctx.http, done_reaction).await {
         on_error::handle_exec_error(err.into());
     }
 }

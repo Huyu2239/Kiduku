@@ -13,6 +13,7 @@ pub struct CheckReadsOutputDto {
     pub mentioned_users: Vec<UserId>,
     pub read_users: Vec<UserId>,
     pub unread_users: Vec<UserId>,
+    pub done_users: Vec<UserId>,
 }
 
 #[derive(Debug, Clone)]

@@ -4,7 +4,13 @@ use poise::serenity_prelude as serenity;
 
 use crate::presentation::Data;
 
-const READ_EMOJI: &str = "✅";
+const KIDOKU_EMOJI_ID: u64 = 1475281418400698633;
+const DONE_EMOJI_ID: u64 = 1475281416370524414;
+
+enum ReactionKind {
+    Read,
+    Done,
+}
 
 pub async fn handle(ctx: &serenity::Context, data: &Data, reaction: &serenity::Reaction) {
     let user_id = match reaction.user_id {
@@ -14,9 +20,11 @@ pub async fn handle(ctx: &serenity::Context, data: &Data, reaction: &serenity::R
     if user_id == ctx.cache.current_user().id {
         return;
     }
-    if !is_read_emoji(&reaction.emoji) {
-        return;
-    }
+
+    let kind = match reaction_kind(&reaction.emoji) {
+        Some(kind) => kind,
+        None => return,
+    };
 
     let now_unix = match current_unix_timestamp() {
         Ok(ts) => ts,
@@ -26,17 +34,33 @@ pub async fn handle(ctx: &serenity::Context, data: &Data, reaction: &serenity::R
         }
     };
 
-    if let Err(err) = data
-        .db
-        .record_read(reaction.message_id.get(), user_id.get(), now_unix)
-        .await
-    {
-        tracing::error!("failed to record read reaction: {:?}", err);
+    let message_id = reaction.message_id.get();
+    let user_id_raw = user_id.get();
+
+    match kind {
+        ReactionKind::Read => {
+            if let Err(err) = data.db.record_read(message_id, user_id_raw, now_unix).await {
+                tracing::error!("failed to record read reaction: {:?}", err);
+            }
+        }
+        ReactionKind::Done => {
+            if let Err(err) = data.db.record_done(message_id, user_id_raw, now_unix).await {
+                tracing::error!("failed to record done reaction: {:?}", err);
+            }
+        }
     }
 }
 
-fn is_read_emoji(emoji: &serenity::ReactionType) -> bool {
-    matches!(emoji, serenity::ReactionType::Unicode(value) if value == READ_EMOJI)
+fn reaction_kind(emoji: &serenity::ReactionType) -> Option<ReactionKind> {
+    match emoji {
+        serenity::ReactionType::Custom { id, .. } if id.get() == KIDOKU_EMOJI_ID => {
+            Some(ReactionKind::Read)
+        }
+        serenity::ReactionType::Custom { id, .. } if id.get() == DONE_EMOJI_ID => {
+            Some(ReactionKind::Done)
+        }
+        _ => None,
+    }
 }
 
 fn current_unix_timestamp() -> anyhow::Result<i64> {

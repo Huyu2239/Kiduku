@@ -152,6 +152,11 @@ fn map_to_message_with_reactions(
             .iter()
             .map(|id| UserId::new(*id))
             .collect(),
+        done_user_ids: mention
+            .done_user_ids
+            .iter()
+            .map(|id| UserId::new(*id))
+            .collect(),
     }
 }
 
@@ -199,10 +204,11 @@ fn format_message_summary(output: &crate::usecase::dto::CheckReadsOutputDto) -> 
 
     let read_users = format_user_mentions(&output.read_users);
     let unread_users = format_user_mentions(&output.unread_users);
+    let done_users = format_user_mentions(&output.done_users);
 
     format!(
-        "内容: {}\n既読: {}/{} ({}%)\n既読ユーザー: {}\n未読ユーザー: {}",
-        snippet, read, total, percent, read_users, unread_users
+        "内容: {}\n既読: {}/{} ({}%)\n既読ユーザー: {}\n未読ユーザー: {}\n解決済みユーザー: {}",
+        snippet, read, total, percent, read_users, unread_users, done_users
     )
 }
 

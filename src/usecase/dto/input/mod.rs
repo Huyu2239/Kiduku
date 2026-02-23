@@ -36,6 +36,7 @@ pub struct MessageWithReactionsDto {
     pub mentions_everyone: bool,
     pub everyone_member_ids: Vec<UserId>,
     pub reaction_user_ids: Vec<UserId>,
+    pub done_user_ids: Vec<UserId>,
 }
 
 #[derive(Debug, Clone)]
