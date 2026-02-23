@@ -15,8 +15,16 @@ CREATE INDEX IF NOT EXISTS idx_mentions_author_created_at
 CREATE TABLE IF NOT EXISTS mention_targets (
   mention_id BIGINT NOT NULL REFERENCES mentions(id) ON DELETE CASCADE,
   user_id BIGINT NOT NULL,
+  extended_until BIGINT NULL,
+  ignored_at BIGINT NULL,
   PRIMARY KEY (mention_id, user_id)
 );
+
+ALTER TABLE mention_targets ADD COLUMN IF NOT EXISTS extended_until BIGINT NULL;
+ALTER TABLE mention_targets ADD COLUMN IF NOT EXISTS ignored_at BIGINT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_mention_targets_user
+  ON mention_targets (user_id);
 
 CREATE TABLE IF NOT EXISTS mention_reads (
   mention_id BIGINT NOT NULL REFERENCES mentions(id) ON DELETE CASCADE,
