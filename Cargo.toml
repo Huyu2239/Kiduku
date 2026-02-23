@@ -25,6 +25,9 @@ poise = "0.6"
 # === 非同期ランタイム ===
 tokio = { version = "1.49", features = ["macros", "rt-multi-thread", "time"] }
 
+# === 日時処理 ===
+chrono = { version = "0.4", features = ["clock"] }
+
 # === エラーハンドリング ===
 anyhow = "1.0"
 
@@ -34,3 +37,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # === 環境変数 ===
 dotenvy = "0.15"
+
+# === Database (PostgreSQL) ===
+tokio-postgres = "0.7"
+deadpool-postgres = { version = "0.14", features = ["rt_tokio_1"] }

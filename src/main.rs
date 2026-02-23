@@ -2,6 +2,7 @@ use anyhow::Context as _;
 use serenity::prelude::*;
 
 use kiduku::infrastructure::config::{set_dev_mode, AppConfig};
+use kiduku::infrastructure::db::Db;
 use kiduku::presentation::build_framework;
 
 #[tokio::main]
@@ -11,6 +12,7 @@ async fn main() -> anyhow::Result<()> {
     let config = AppConfig::load()?;
     let AppConfig {
         discord_bot_token,
+        database_url,
         env_filter,
         dev_mode,
     } = config;
@@ -21,10 +23,14 @@ async fn main() -> anyhow::Result<()> {
         .with_line_number(dev_mode)
         .init();
 
-    let intents =
-        GatewayIntents::GUILDS | GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
+    let intents = GatewayIntents::GUILDS
+        | GatewayIntents::GUILD_MESSAGES
+        | GatewayIntents::MESSAGE_CONTENT
+        | GatewayIntents::GUILD_MEMBERS
+        | GatewayIntents::GUILD_MESSAGE_REACTIONS;
 
-    let framework = build_framework();
+    let db = Db::connect(&database_url).await?;
+    let framework = build_framework(db);
     let mut client = Client::builder(discord_bot_token, intents)
         .framework(framework)
         .await
