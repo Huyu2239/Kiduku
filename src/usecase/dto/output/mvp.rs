@@ -1,4 +1,4 @@
-use serenity::model::prelude::{MessageId, RoleId, UserId};
+use serenity::model::prelude::MessageId;
 
 #[derive(Debug, Clone)]
 pub struct AddReadReactionOutputDto {
@@ -7,13 +7,8 @@ pub struct AddReadReactionOutputDto {
 }
 
 #[derive(Debug, Clone)]
-pub struct CheckReadsOutputDto {
-    pub message_id: MessageId,
-    pub message_content: String,
-    pub mentioned_users: Vec<UserId>,
-    pub read_users: Vec<UserId>,
-    pub unread_users: Vec<UserId>,
-    pub done_users: Vec<UserId>,
+pub enum UsecaseError {
+    Internal,
 }
 
 #[derive(Debug, Clone)]
@@ -29,29 +24,3 @@ pub struct HelpOutputDto {
     pub description: String,
     pub commands: Vec<HelpCommandDto>,
 }
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum UsecaseError {
-    NoMentionedUsers,
-    NoMessages,
-    RoleNotFound(RoleId),
-    InvalidHoursParameter,
-    InvalidMentionData,
-}
-
-impl std::fmt::Display for UsecaseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let message = match self {
-            UsecaseError::NoMentionedUsers => "メンション対象者が見つかりませんでした。",
-            UsecaseError::NoMessages => "対象となるメッセージが見つかりませんでした。",
-            UsecaseError::RoleNotFound(role_id) => {
-                return write!(f, "ロールが見つかりませんでした: {}", role_id.get());
-            }
-            UsecaseError::InvalidHoursParameter => "hours パラメータが不正です。",
-            UsecaseError::InvalidMentionData => "メンション情報が不正です。",
-        };
-        write!(f, "{message}")
-    }
-}
-
-impl std::error::Error for UsecaseError {}
