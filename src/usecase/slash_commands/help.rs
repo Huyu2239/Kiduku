@@ -8,9 +8,15 @@ pub fn execute() -> Result<HelpOutputDto, UsecaseError> {
             example: "/help".into(),
         },
         HelpCommandDto {
-            name: "/check-reads".into(),
-            description: "直近のメンション付きメッセージの既読状況を確認します。".into(),
-            example: "/check-reads 24".into(),
+            name: "既読状況確認 (メッセージ右クリック)".into(),
+            description: "メッセージの既読・未読・解決済みユーザーを確認します。".into(),
+            example: "メッセージを右クリック → アプリ → 既読状況確認".into(),
+        },
+        HelpCommandDto {
+            name: "/通知一覧".into(),
+            description: "自分宛のメンション一覧を確認します。show_done で解決済みも表示できます。"
+                .into(),
+            example: "/通知一覧 show_done:true".into(),
         },
     ];
 

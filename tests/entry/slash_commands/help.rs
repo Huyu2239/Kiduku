@@ -17,5 +17,5 @@ fn test_help_command_output() {
         .collect::<Vec<_>>();
 
     assert!(command_names.contains(&"/help"));
-    assert!(command_names.contains(&"/check-reads"));
+    assert!(command_names.contains(&"/通知一覧"));
 }
