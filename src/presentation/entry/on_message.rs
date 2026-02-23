@@ -18,6 +18,11 @@ pub async fn handle(ctx: &serenity::Context, data: &Data, message: &serenity::Me
         return;
     }
 
+    match message.kind {
+        serenity::MessageType::Regular | serenity::MessageType::InlineReply => {}
+        _ => return,
+    }
+
     let input = input_mapper::from_message_to_message_input_dto(message);
     let output = match auto_add_read_reaction::execute(input) {
         Ok(output) => output,
