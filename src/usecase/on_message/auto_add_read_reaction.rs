@@ -54,12 +54,13 @@ mod tests {
     }
 
     #[test]
-    fn returns_false_when_reply_with_mentions() {
+    fn returns_false_when_reply_with_only_auto_mention() {
+        // オートメンション（content に <@> なし）のリプライは反応しない
         let input = MessageInputDto {
             message_id: MessageId::new(1),
             channel_id: ChannelId::new(1),
             author_id: UserId::new(1),
-            content: "<@2> ping".into(),
+            content: "了解です".into(),
             user_mentions: vec![UserId::new(2)],
             role_mentions: Vec::new(),
             mentions_everyone: false,
@@ -68,5 +69,23 @@ mod tests {
 
         let output = execute(input).expect("usecase should succeed");
         assert!(!output.should_add_reaction);
+    }
+
+    #[test]
+    fn returns_true_when_reply_with_explicit_text_mention() {
+        // テキストに明示的に <@ID> を書いたリプライは反応する
+        let input = MessageInputDto {
+            message_id: MessageId::new(1),
+            channel_id: ChannelId::new(1),
+            author_id: UserId::new(1),
+            content: "<@2> 確認お願いします".into(),
+            user_mentions: vec![UserId::new(2)],
+            role_mentions: Vec::new(),
+            mentions_everyone: false,
+            is_reply: true,
+        };
+
+        let output = execute(input).expect("usecase should succeed");
+        assert!(output.should_add_reaction);
     }
 }

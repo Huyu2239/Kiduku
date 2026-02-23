@@ -1,7 +1,11 @@
 use crate::domain::model::{MentionType, Message};
 
 pub fn should_add_read_reaction(message: &Message) -> bool {
-    !message.is_reply && message.has_mention()
+    if message.is_reply {
+        message.has_explicit_mention_in_content()
+    } else {
+        message.has_mention()
+    }
 }
 
 pub fn extract_mentions(message: &Message) -> Vec<MentionType> {
@@ -52,12 +56,24 @@ mod tests {
     }
 
     #[test]
-    fn skips_reply_messages() {
+    fn skips_reply_with_only_auto_mention() {
+        // オートメンションは content に <@> が入らないため反応しない
         let mut message = base_message();
         message.user_mentions = vec![UserId::new(10)];
         message.is_reply = true;
 
         assert!(!should_add_read_reaction(&message));
+    }
+
+    #[test]
+    fn reacts_to_reply_with_explicit_text_mention() {
+        // テキストに明示的に <@ID> を書いた場合は反応する
+        let mut message = base_message();
+        message.user_mentions = vec![UserId::new(10)];
+        message.content = "<@10> 確認お願いします".into();
+        message.is_reply = true;
+
+        assert!(should_add_read_reaction(&message));
     }
 
     #[test]
