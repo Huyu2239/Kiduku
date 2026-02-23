@@ -1,6 +1,7 @@
 use poise::serenity_prelude as serenity;
 use serenity::model::prelude::UserId;
 
+use crate::presentation::entry::util::truncate;
 use crate::presentation::{Context, Error};
 use crate::usecase::slash_commands::view_read_status as view_read_status_usecase;
 
@@ -72,14 +73,6 @@ pub async fn main(ctx: Context<'_>, msg: serenity::Message) -> Result<(), Error>
     ctx.send(poise::CreateReply::default().embed(embed).ephemeral(true))
         .await?;
     Ok(())
-}
-
-fn truncate(content: &str, max_chars: usize) -> String {
-    let mut truncated = content.chars().take(max_chars).collect::<String>();
-    if content.chars().count() > max_chars {
-        truncated.push('…');
-    }
-    truncated
 }
 
 fn format_user_mentions(users: &[UserId]) -> String {

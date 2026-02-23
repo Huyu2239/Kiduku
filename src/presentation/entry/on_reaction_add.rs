@@ -1,11 +1,7 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use poise::serenity_prelude as serenity;
 
+use crate::presentation::entry::util::{current_unix_timestamp, DONE_EMOJI_ID, KIDOKU_EMOJI_ID};
 use crate::presentation::Data;
-
-const KIDOKU_EMOJI_ID: u64 = 1475281418400698633;
-const DONE_EMOJI_ID: u64 = 1475281416370524414;
 
 enum ReactionKind {
     Read,
@@ -26,14 +22,7 @@ pub async fn handle(ctx: &serenity::Context, data: &Data, reaction: &serenity::R
         None => return,
     };
 
-    let now_unix = match current_unix_timestamp() {
-        Ok(ts) => ts,
-        Err(err) => {
-            tracing::error!("failed to get current time: {:?}", err);
-            return;
-        }
-    };
-
+    let now_unix = current_unix_timestamp();
     let message_id = reaction.message_id.get();
     let user_id_raw = user_id.get();
 
@@ -61,11 +50,4 @@ fn reaction_kind(emoji: &serenity::ReactionType) -> Option<ReactionKind> {
         }
         _ => None,
     }
-}
-
-fn current_unix_timestamp() -> anyhow::Result<i64> {
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(anyhow::Error::from)?;
-    Ok(now.as_secs() as i64)
 }

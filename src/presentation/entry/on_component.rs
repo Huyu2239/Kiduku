@@ -1,8 +1,7 @@
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use poise::serenity_prelude as serenity;
 
 use crate::presentation::entry::slash_commands::my_mentions;
+use crate::presentation::entry::util::current_unix_timestamp;
 use crate::presentation::Data;
 
 pub async fn handle(ctx: &serenity::Context, data: &Data, comp: &serenity::ComponentInteraction) {
@@ -14,6 +13,32 @@ pub async fn handle(ctx: &serenity::Context, data: &Data, comp: &serenity::Compo
     } else if id.starts_with("mm:ignore:") {
         handle_ignore(ctx, data, comp).await;
     }
+}
+
+/// ボタンの所有者でないユーザーへのエラー応答を送信する。
+/// 未認証であれば `true` を返す。
+async fn reject_if_unauthorized(
+    ctx: &serenity::Context,
+    comp: &serenity::ComponentInteraction,
+    owner_user_id: u64,
+) -> bool {
+    if comp.user.id.get() == owner_user_id {
+        return false;
+    }
+    if let Err(err) = comp
+        .create_response(
+            &ctx.http,
+            serenity::CreateInteractionResponse::Message(
+                serenity::CreateInteractionResponseMessage::new()
+                    .content("このボタンはあなた向けではありません。")
+                    .ephemeral(true),
+            ),
+        )
+        .await
+    {
+        tracing::error!("failed to respond to unauthorized interaction: {:?}", err);
+    }
+    true
 }
 
 async fn handle_pagination(
@@ -37,20 +62,7 @@ async fn handle_pagination(
         Err(_) => return,
     };
 
-    if comp.user.id.get() != owner_user_id {
-        if let Err(err) = comp
-            .create_response(
-                &ctx.http,
-                serenity::CreateInteractionResponse::Message(
-                    serenity::CreateInteractionResponseMessage::new()
-                        .content("このボタンはあなた向けではありません。")
-                        .ephemeral(true),
-                ),
-            )
-            .await
-        {
-            tracing::error!("failed to respond to unauthorized pagination: {:?}", err);
-        }
+    if reject_if_unauthorized(ctx, comp, owner_user_id).await {
         return;
     }
 
@@ -122,20 +134,7 @@ async fn handle_extend(
         Err(_) => return,
     };
 
-    if comp.user.id.get() != owner_user_id {
-        if let Err(err) = comp
-            .create_response(
-                &ctx.http,
-                serenity::CreateInteractionResponse::Message(
-                    serenity::CreateInteractionResponseMessage::new()
-                        .content("このボタンはあなた向けではありません。")
-                        .ephemeral(true),
-                ),
-            )
-            .await
-        {
-            tracing::error!("failed to respond to unauthorized extend: {:?}", err);
-        }
+    if reject_if_unauthorized(ctx, comp, owner_user_id).await {
         return;
     }
 
@@ -185,20 +184,7 @@ async fn handle_ignore(
         Err(_) => return,
     };
 
-    if comp.user.id.get() != owner_user_id {
-        if let Err(err) = comp
-            .create_response(
-                &ctx.http,
-                serenity::CreateInteractionResponse::Message(
-                    serenity::CreateInteractionResponseMessage::new()
-                        .content("このボタンはあなた向けではありません。")
-                        .ephemeral(true),
-                ),
-            )
-            .await
-        {
-            tracing::error!("failed to respond to unauthorized ignore: {:?}", err);
-        }
+    if reject_if_unauthorized(ctx, comp, owner_user_id).await {
         return;
     }
 
@@ -226,11 +212,4 @@ async fn handle_ignore(
     {
         tracing::error!("failed to update ignore message: {:?}", err);
     }
-}
-
-fn current_unix_timestamp() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as i64
 }
