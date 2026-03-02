@@ -1,0 +1,55 @@
+name: "運用・保守タスク"
+description: "ドキュメント更新、CI改善、リファクタ等の非機能タスク"
+title: "[Task] "
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: タスク種別
+      options:
+        - ドキュメント
+        - テスト
+        - CI/CD
+        - リファクタ
+        - 運用改善
+    validations:
+      required: true
+  - type: textarea
+    id: objective
+    attributes:
+      label: 目的
+      description: なぜこのタスクが必要か。
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 作業スコープ
+      description: 対象ファイル・対象機能・非対象範囲を明記してください。
+      placeholder: |
+        対象:
+        - ...
+        非対象:
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: 完了条件
+      description: 完了時に満たす条件。
+      placeholder: |
+        - [ ] 条件1
+        - [ ] 条件2
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: 検証方法
+      description: 実行するコマンド、確認手順、期待結果を記載してください。
+      placeholder: |
+        - `cargo test`
+        - 結果: 全件成功
+    validations:
+      required: true
