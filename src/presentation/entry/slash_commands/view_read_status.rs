@@ -1,5 +1,7 @@
+use std::collections::HashSet;
+
 use poise::serenity_prelude as serenity;
-use serenity::model::prelude::UserId;
+use serenity::model::prelude::{ChannelType, UserId};
 
 use crate::presentation::entry::util::truncate;
 use crate::presentation::{Context, Error};
@@ -15,7 +17,7 @@ pub async fn main(ctx: Context<'_>, msg: serenity::Message) -> Result<(), Error>
         .fetch_mention_by_message_id(msg.id.get())
         .await?;
 
-    let mention = match mention {
+    let mut mention = match mention {
         Some(m) => m,
         None => {
             ctx.send(
@@ -27,6 +29,8 @@ pub async fn main(ctx: Context<'_>, msg: serenity::Message) -> Result<(), Error>
             return Ok(());
         }
     };
+
+    reconcile_targets_for_thread_everyone(&ctx, &mut mention).await?;
 
     let output = match view_read_status_usecase::execute(mention) {
         Some(o) => o,
@@ -82,6 +86,71 @@ pub async fn main(ctx: Context<'_>, msg: serenity::Message) -> Result<(), Error>
 
     ctx.send(poise::CreateReply::default().embed(embed).ephemeral(true))
         .await?;
+    Ok(())
+}
+
+async fn reconcile_targets_for_thread_everyone(
+    ctx: &Context<'_>,
+    mention: &mut crate::infrastructure::db::StoredMention,
+) -> Result<(), Error> {
+    if !mention.mention_everyone {
+        return Ok(());
+    }
+
+    let channel_id = serenity::ChannelId::new(mention.channel_id);
+    let is_thread = match channel_id.to_channel(ctx.serenity_context()).await {
+        Ok(serenity::Channel::Guild(channel)) => matches!(
+            channel.kind,
+            ChannelType::PublicThread | ChannelType::PrivateThread | ChannelType::NewsThread
+        ),
+        _ => false,
+    };
+
+    if !is_thread {
+        return Ok(());
+    }
+
+    let thread_members = match channel_id
+        .get_thread_members(&ctx.serenity_context().http)
+        .await
+    {
+        Ok(members) => members,
+        Err(err) => {
+            tracing::warn!(
+                "failed to fetch thread members in view_read_status: channel_id={}, err={:?}",
+                mention.channel_id,
+                err
+            );
+            return Ok(());
+        }
+    };
+
+    let member_ids = thread_members
+        .into_iter()
+        .map(|member| member.user_id.get())
+        .collect::<HashSet<_>>();
+
+    let before_len = mention.target_user_ids.len();
+    mention
+        .target_user_ids
+        .retain(|user_id| member_ids.contains(user_id));
+
+    if mention.target_user_ids.len() == before_len {
+        return Ok(());
+    }
+
+    let deleted = ctx
+        .data()
+        .db
+        .delete_targets_except_by_message_id(mention.message_id, &mention.target_user_ids)
+        .await?;
+
+    tracing::info!(
+        "reconciled mention targets for thread everyone/here in view_read_status: message_id={}, removed={}",
+        mention.message_id,
+        deleted
+    );
+
     Ok(())
 }
 
