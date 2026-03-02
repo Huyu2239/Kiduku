@@ -167,6 +167,44 @@ impl Db {
         Ok(())
     }
 
+    pub async fn delete_mention_by_message_id(&self, message_id: u64) -> anyhow::Result<u64> {
+        let client = self
+            .pool
+            .get()
+            .await
+            .context("DB接続の取得に失敗しました")?;
+
+        let deleted = client
+            .execute(
+                "DELETE FROM mentions WHERE message_id = $1",
+                &[&(message_id as i64)],
+            )
+            .await
+            .context("メンションの削除に失敗しました")?;
+
+        Ok(deleted)
+    }
+
+    pub async fn delete_mentions_by_message_ids(&self, message_ids: &[u64]) -> anyhow::Result<u64> {
+        if message_ids.is_empty() {
+            return Ok(0);
+        }
+
+        let client = self
+            .pool
+            .get()
+            .await
+            .context("DB接続の取得に失敗しました")?;
+
+        let ids = message_ids.iter().map(|id| *id as i64).collect::<Vec<_>>();
+        let deleted = client
+            .execute("DELETE FROM mentions WHERE message_id = ANY($1)", &[&ids])
+            .await
+            .context("メンション一括削除に失敗しました")?;
+
+        Ok(deleted)
+    }
+
     pub async fn fetch_mentions_for_author(
         &self,
         author_id: u64,
