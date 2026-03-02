@@ -60,6 +60,23 @@ async fn handle_event(ctx: &serenity::Context, event: &serenity::FullEvent, data
         return;
     }
 
+    if let serenity::FullEvent::MessageDelete {
+        deleted_message_id, ..
+    } = event
+    {
+        entry::on_message_delete::handle_single(data, *deleted_message_id).await;
+        return;
+    }
+
+    if let serenity::FullEvent::MessageDeleteBulk {
+        multiple_deleted_messages_ids,
+        ..
+    } = event
+    {
+        entry::on_message_delete::handle_bulk(data, multiple_deleted_messages_ids).await;
+        return;
+    }
+
     if let serenity::FullEvent::InteractionCreate {
         interaction: serenity::Interaction::Component(comp),
     } = event
