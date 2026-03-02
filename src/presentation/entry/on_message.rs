@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use anyhow::Context as _;
 use poise::serenity_prelude as serenity;
-use serenity::model::prelude::{Member, RoleId, UserId};
+use serenity::model::prelude::{ChannelType, Member, RoleId, UserId};
 
 use crate::infrastructure::db::NewMention;
 use crate::interface::mapper::input_mapper;
@@ -101,11 +101,7 @@ async fn collect_targets(
 
     let members = fetch_guild_members(ctx, guild_id).await?;
     let role_members = build_role_members_map(&members);
-    let everyone_members = members
-        .iter()
-        .filter(|member| !member.user.bot && member.user.id != bot_id)
-        .map(|member| member.user.id)
-        .collect::<Vec<_>>();
+    let everyone_members = resolve_everyone_targets(ctx, message, &members, bot_id).await;
 
     let mut targets = Vec::new();
     targets.extend(
@@ -143,6 +139,64 @@ async fn fetch_guild_members(
         .await
         .context("failed to fetch guild members. enable the GUILD_MEMBERS intent")?;
     Ok(members)
+}
+
+async fn resolve_everyone_targets(
+    ctx: &serenity::Context,
+    message: &serenity::Message,
+    members: &[Member],
+    bot_id: UserId,
+) -> Vec<UserId> {
+    let guild_targets = members
+        .iter()
+        .filter(|member| !member.user.bot && member.user.id != bot_id)
+        .map(|member| member.user.id)
+        .collect::<Vec<_>>();
+
+    if !message.mention_everyone {
+        return Vec::new();
+    }
+
+    if !is_thread_message(ctx, message).await {
+        return guild_targets;
+    }
+
+    let thread_members = match message.channel_id.get_thread_members(&ctx.http).await {
+        Ok(members) => members,
+        Err(err) => {
+            tracing::warn!(
+                "failed to fetch thread members for @everyone/@here, fallback to guild targets: {:?}",
+                err
+            );
+            return guild_targets;
+        }
+    };
+
+    let non_bot_user_ids = members
+        .iter()
+        .filter(|member| !member.user.bot)
+        .map(|member| member.user.id)
+        .collect::<HashSet<_>>();
+
+    let mut targets = thread_members
+        .iter()
+        .map(|member| member.user_id)
+        .filter(|user_id| *user_id != bot_id)
+        .filter(|user_id| non_bot_user_ids.contains(user_id))
+        .collect::<Vec<_>>();
+    targets.sort_unstable();
+    targets.dedup();
+    targets
+}
+
+async fn is_thread_message(ctx: &serenity::Context, message: &serenity::Message) -> bool {
+    match message.channel_id.to_channel(&ctx.http).await {
+        Ok(serenity::Channel::Guild(channel)) => matches!(
+            channel.kind,
+            ChannelType::PublicThread | ChannelType::PrivateThread | ChannelType::NewsThread
+        ),
+        _ => false,
+    }
 }
 
 fn build_role_members_map(members: &[Member]) -> HashMap<RoleId, Vec<UserId>> {
