@@ -44,6 +44,7 @@ pub struct MentionForTarget {
     pub message_id: u64,
     pub author_id: u64,
     pub content: String,
+    pub mention_everyone: bool,
     pub created_at_unix: i64,
     pub is_read: bool,
     pub is_done: bool,
@@ -323,7 +324,7 @@ impl Db {
         let rows = client
             .query(
                 "SELECT m.id, m.guild_id, m.channel_id, m.message_id, m.author_id, \
-                        m.content, m.created_at, mt.extended_until, \
+                        m.content, m.mention_everyone, m.created_at, mt.extended_until, \
                         EXISTS(SELECT 1 FROM mention_reads \
                                WHERE mention_id = m.id AND user_id = $1) AS is_read, \
                         EXISTS(SELECT 1 FROM mention_dones \
@@ -350,6 +351,7 @@ impl Db {
                 message_id: row.get::<_, i64>("message_id") as u64,
                 author_id: row.get::<_, i64>("author_id") as u64,
                 content: row.get::<_, String>("content"),
+                mention_everyone: row.get::<_, bool>("mention_everyone"),
                 created_at_unix: row.get::<_, i64>("created_at"),
                 is_read: row.get::<_, bool>("is_read"),
                 is_done: row.get::<_, bool>("is_done"),
@@ -408,6 +410,28 @@ impl Db {
         Ok(())
     }
 
+    pub async fn delete_target_for_user(
+        &self,
+        mention_id: i64,
+        user_id: u64,
+    ) -> anyhow::Result<u64> {
+        let client = self
+            .pool
+            .get()
+            .await
+            .context("DB接続の取得に失敗しました")?;
+
+        let deleted = client
+            .execute(
+                "DELETE FROM mention_targets WHERE mention_id = $1 AND user_id = $2",
+                &[&mention_id, &(user_id as i64)],
+            )
+            .await
+            .context("メンション対象者の削除に失敗しました")?;
+
+        Ok(deleted)
+    }
+
     /// 週次バッチ用: 未読かつ未DONEのターゲット (mention_id, user_id) を返す
     pub async fn fetch_unread_targets_for_weekly_batch(&self) -> anyhow::Result<Vec<(i64, u64)>> {
         let client = self
@@ -458,7 +482,7 @@ impl Db {
         let rows = client
             .query(
                 "SELECT m.id, m.guild_id, m.channel_id, m.message_id, m.author_id, \
-                        m.content, m.created_at, mt.extended_until, mt.user_id, \
+                        m.content, m.mention_everyone, m.created_at, mt.extended_until, mt.user_id, \
                         EXISTS(SELECT 1 FROM mention_reads \
                                WHERE mention_id = m.id AND user_id = mt.user_id) AS is_read, \
                         EXISTS(SELECT 1 FROM mention_dones \
@@ -487,6 +511,7 @@ impl Db {
                     message_id: row.get::<_, i64>("message_id") as u64,
                     author_id: row.get::<_, i64>("author_id") as u64,
                     content: row.get::<_, String>("content"),
+                    mention_everyone: row.get::<_, bool>("mention_everyone"),
                     created_at_unix: row.get::<_, i64>("created_at"),
                     is_read: row.get::<_, bool>("is_read"),
                     is_done: row.get::<_, bool>("is_done"),

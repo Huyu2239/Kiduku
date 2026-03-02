@@ -66,7 +66,7 @@ async fn handle_pagination(
         return;
     }
 
-    let items = match my_mentions::fetch_page(&data.db, owner_user_id, page, show_done).await {
+    let items = match my_mentions::fetch_page(&data.db, ctx, owner_user_id, page, show_done).await {
         Ok(items) => items,
         Err(err) => {
             tracing::error!("failed to fetch page for pagination: {:?}", err);
