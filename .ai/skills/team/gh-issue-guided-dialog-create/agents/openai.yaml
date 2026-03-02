@@ -1,0 +1,4 @@
+interface:
+  display_name: "Guided GH Issue Create"
+  short_description: "Guide a dialog and file high-quality GitHub issues"
+  default_prompt: "Use $gh-issue-guided-dialog-create to gather details and create a GitHub issue from our conversation."

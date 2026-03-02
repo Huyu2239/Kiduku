@@ -1,0 +1,4 @@
+interface:
+  display_name: "Refine Notes to GH Issue"
+  short_description: "Convert rough notes into a complete GitHub issue"
+  default_prompt: "Use $gh-issue-dialog-refine-and-file to refine my notes and file a GitHub issue."

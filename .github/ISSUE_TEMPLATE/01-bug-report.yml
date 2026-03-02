@@ -1,0 +1,66 @@
+name: "不具合報告"
+description: "再現手順と期待結果を含む不具合報告"
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        不具合の再現条件を具体的に記載してください。ログ・スクリーンショットがあれば添付してください。
+  - type: textarea
+    id: summary
+    attributes:
+      label: 現象
+      description: 何が起きているかを1-3文で説明してください。
+      placeholder: 例) /通知一覧 実行時に空一覧でもエラーになる
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する挙動
+      description: 本来どう動くべきか。
+      placeholder: 例) 空一覧時は「通知はありません」と表示される
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 再現手順
+      description: 再現に必要な手順を番号付きで記載してください。
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 影響度
+      options:
+        - 高（機能停止・データ不整合）
+        - 中（主要機能が部分的に使えない）
+        - 低（回避策あり・軽微な不具合）
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 実行環境
+      description: OS・実行方法・対象ブランチ/コミットなど。
+      placeholder: "例) macOS 14.7 / cargo run / feature/xxx"
+  - type: textarea
+    id: logs
+    attributes:
+      label: ログ・補足資料
+      description: 必要な範囲だけ貼り付けてください。機密情報は含めないでください。
+      render: shell
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 事前確認
+      options:
+        - label: 既存Issueに同様の報告がないことを確認した
+          required: true
+        - label: 機密情報（トークン・鍵・個人情報）を含んでいない
+          required: true
