@@ -2,6 +2,10 @@
 
 !docs/*
 !rules/*
-!skills/**/*
+!skills/
+!skills/community/
+!skills/community/**/*
+!skills/team/
+!skills/team/**/*
 !AGENTS.md
 !config.toml
