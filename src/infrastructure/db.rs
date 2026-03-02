@@ -30,6 +30,7 @@ pub struct StoredMention {
     pub channel_id: u64,
     pub message_id: u64,
     pub content: String,
+    pub mention_everyone: bool,
     pub created_at_unix: i64,
     pub target_user_ids: Vec<u64>,
     pub read_user_ids: Vec<u64>,
@@ -220,7 +221,7 @@ impl Db {
 
         let rows = client
             .query(
-                "SELECT id, guild_id, channel_id, message_id, author_id, content, created_at \
+                "SELECT id, guild_id, channel_id, message_id, author_id, content, mention_everyone, created_at \
                  FROM mentions \
                  WHERE author_id = $1 AND created_at >= $2 \
                  ORDER BY created_at DESC \
@@ -255,6 +256,7 @@ impl Db {
                 channel_id: row.get::<_, i64>("channel_id") as u64,
                 message_id: row.get::<_, i64>("message_id") as u64,
                 content: row.get::<_, String>("content"),
+                mention_everyone: row.get::<_, bool>("mention_everyone"),
                 created_at_unix: row.get::<_, i64>("created_at"),
                 target_user_ids,
                 read_user_ids,
@@ -277,7 +279,7 @@ impl Db {
 
         let row = match client
             .query_opt(
-                "SELECT id, guild_id, channel_id, message_id, author_id, content, created_at \
+                "SELECT id, guild_id, channel_id, message_id, author_id, content, mention_everyone, created_at \
                  FROM mentions WHERE message_id = $1",
                 &[&(message_id as i64)],
             )
@@ -301,6 +303,7 @@ impl Db {
             channel_id: row.get::<_, i64>("channel_id") as u64,
             message_id: row.get::<_, i64>("message_id") as u64,
             content: row.get::<_, String>("content"),
+            mention_everyone: row.get::<_, bool>("mention_everyone"),
             created_at_unix: row.get::<_, i64>("created_at"),
             target_user_ids: targets.get(&mention_id).cloned().unwrap_or_default(),
             read_user_ids: reads.get(&mention_id).cloned().unwrap_or_default(),
@@ -428,6 +431,48 @@ impl Db {
             )
             .await
             .context("メンション対象者の削除に失敗しました")?;
+
+        Ok(deleted)
+    }
+
+    pub async fn delete_targets_except_by_message_id(
+        &self,
+        message_id: u64,
+        keep_user_ids: &[u64],
+    ) -> anyhow::Result<u64> {
+        let client = self
+            .pool
+            .get()
+            .await
+            .context("DB接続の取得に失敗しました")?;
+
+        let deleted = if keep_user_ids.is_empty() {
+            client
+                .execute(
+                    "DELETE FROM mention_targets mt \
+                     USING mentions m \
+                     WHERE mt.mention_id = m.id AND m.message_id = $1",
+                    &[&(message_id as i64)],
+                )
+                .await
+                .context("メンション対象者の削除に失敗しました")?
+        } else {
+            let keep_ids = keep_user_ids
+                .iter()
+                .map(|id| *id as i64)
+                .collect::<Vec<_>>();
+            client
+                .execute(
+                    "DELETE FROM mention_targets mt \
+                     USING mentions m \
+                     WHERE mt.mention_id = m.id \
+                       AND m.message_id = $1 \
+                       AND NOT (mt.user_id = ANY($2))",
+                    &[&(message_id as i64), &keep_ids],
+                )
+                .await
+                .context("メンション対象者の削除に失敗しました")?
+        };
 
         Ok(deleted)
     }
