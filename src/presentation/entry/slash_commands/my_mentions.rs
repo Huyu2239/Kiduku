@@ -18,6 +18,14 @@ pub async fn main(
     let is_ephemeral = ctx.guild_id().is_some();
     let user_id = ctx.author().id;
 
+    // fetch_page は Discord API を複数回呼ぶため 3秒タイムアウトを超えることがある。
+    // 先に defer して acknowledge を送り、その後 follow-up で応答する。
+    if is_ephemeral {
+        ctx.defer_ephemeral().await?;
+    } else {
+        ctx.defer().await?;
+    }
+
     let items = fetch_page(
         &ctx.data().db,
         ctx.serenity_context(),

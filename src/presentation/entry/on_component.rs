@@ -66,6 +66,16 @@ async fn handle_pagination(
         return;
     }
 
+    // fetch_page は Discord API を複数回呼ぶため 3秒タイムアウトを超えることがある。
+    // 先に Acknowledge (DeferredUpdateMessage) を送り、その後 edit_response で更新する。
+    if let Err(err) = comp
+        .create_response(&ctx.http, serenity::CreateInteractionResponse::Acknowledge)
+        .await
+    {
+        tracing::error!("failed to acknowledge pagination interaction: {:?}", err);
+        return;
+    }
+
     let items = match my_mentions::fetch_page(&data.db, ctx, owner_user_id, page, show_done).await {
         Ok(items) => items,
         Err(err) => {
@@ -76,14 +86,12 @@ async fn handle_pagination(
 
     if items.is_empty() {
         if let Err(err) = comp
-            .create_response(
+            .edit_response(
                 &ctx.http,
-                serenity::CreateInteractionResponse::UpdateMessage(
-                    serenity::CreateInteractionResponseMessage::new()
-                        .content("これ以上のメンションはありません。")
-                        .embeds(vec![])
-                        .components(vec![]),
-                ),
+                serenity::EditInteractionResponse::new()
+                    .content("これ以上のメンションはありません。")
+                    .embeds(vec![])
+                    .components(vec![]),
             )
             .await
         {
@@ -101,13 +109,11 @@ async fn handle_pagination(
         my_mentions::build_nav_buttons(page, show_done, owner_user_id, page > 0, has_next);
 
     if let Err(err) = comp
-        .create_response(
+        .edit_response(
             &ctx.http,
-            serenity::CreateInteractionResponse::UpdateMessage(
-                serenity::CreateInteractionResponseMessage::new()
-                    .embeds(embeds)
-                    .components(components),
-            ),
+            serenity::EditInteractionResponse::new()
+                .embeds(embeds)
+                .components(components),
         )
         .await
     {
