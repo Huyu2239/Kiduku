@@ -23,7 +23,7 @@ serenity = { version = "0.12", default-features = false, features = [
 poise = "0.6"
 
 # === 非同期ランタイム ===
-tokio = { version = "1.51", features = ["macros", "rt-multi-thread", "time"] }
+tokio = { version = "1.52", features = ["macros", "rt-multi-thread", "time"] }
 
 # === 日時処理 ===
 chrono = { version = "0.4", features = ["clock"] }
