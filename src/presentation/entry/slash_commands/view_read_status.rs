@@ -52,9 +52,7 @@ pub async fn main(ctx: Context<'_>, msg: serenity::Message) -> Result<(), Error>
     let snippet = truncate(&output.message_content, 100);
     let total = output.read_users.len() + output.unread_users.len();
     let read_count = output.read_users.len();
-    let percent = (read_count * 100)
-        .checked_div(total)
-        .unwrap_or(0);
+    let percent = (read_count * 100).checked_div(total).unwrap_or(0);
     let read_summary = format!("{}/{} ({}%)", read_count, total, percent);
     let read_users_text = format_user_mentions_limited(
         &output.read_users,
