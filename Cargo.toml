@@ -20,7 +20,7 @@ serenity = { version = "0.12", default-features = false, features = [
     "cache",          # キャッシュ
     "rustls_backend", # TLS (rustls使用)
 ] }
-poise = "0.6"
+poise = "0.7"
 
 # === 非同期ランタイム ===
 tokio = { version = "1.52", features = ["macros", "rt-multi-thread", "time"] }
